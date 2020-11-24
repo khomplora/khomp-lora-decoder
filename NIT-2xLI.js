@@ -1,9 +1,3 @@
-/** @file Decoder.c
- *
- * @par
- * COPYRIGHT NOTICE: (c) 2020 Khomp. All rights reserved.
- */
-
 /**
 * Decode an uplink message from a buffer (array) of bytes to an object of fields.
 * If use ChirpStack, rename the function to "function Decode(port, bytes, variables)"
