@@ -1,7 +1,7 @@
 # Khomp LoRaWAN Decoder
 Example decoder functions to Khomp LoRaWAN end-devices
 
-##### Options available:
+##### Decoders available:
 
 | Devices          | Decoder Version |
 | -------------    | :-------------|
