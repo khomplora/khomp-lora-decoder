@@ -308,6 +308,22 @@ function Decoder(bytes, port) {
                             conn.v = bytes[index++].toFixed(0);
                             conn.u = '%';
                             module.push(conn);
+
+                            //Lux and UV
+                            if (mask_emw104 >> 1 & 0x01) {
+                                var conn = {};
+                                conn.n = 'luminosity';
+                                conn.v = (bytes[index++] << 16) | (bytes[index++] << 8) | bytes[index++];
+                                conn.u = 'lx';
+                                module.push(conn);
+
+                                var conn = {};
+                                conn.n = 'uv';
+                                conn.v = bytes[index++];
+                                conn.v = (conn.v / 10.0).toFixed(1);
+                                conn.u = '/';
+                                module.push(conn);
+                            }
                         }
 
                         //Pyranometer
