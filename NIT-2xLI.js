@@ -1,3 +1,4 @@
+
 /**
 * Decode an uplink message from a buffer (array) of bytes to an object of fields.
 * If use ChirpStack, rename the function to "function Decode(port, bytes, variables)"
@@ -9,16 +10,16 @@ function Decoder(bytes, port) {
     var mask_sensor_ext = bytes[index++];
     var status_dry = ["OPEN", "CLOSED"];
     var status_relay = ["NO", "NC"];
-    var device = {};
 
-    decoded.device = [];
-
+    var model = {n : "model"};
     // Decode Model
     switch (port) {
-        case 3: device.model = "NIT20L"; break;
-        case 4: device.model = "NIT21L"; break;
-        default: device.model = "Unknow Model"; return decoded;
+        case 3: model.v = "NIT20L"; break;
+        case 4: model.v = "NIT21L"; break;
+        default: model.v = "Unknow Model"; return decoded;
     }
+    decoded.device = [];
+    decoded.device.push(model);
 
     if (mask_sensor_int & 0x19) {
         decoded.internal_sensors = [];
@@ -36,16 +37,16 @@ function Decoder(bytes, port) {
 
     // Decode Firmware Version
     if (mask_sensor_int >> 2 & 0x01) {
+        var firmware_version = {n : "version"};
         var firmware = bytes[index++] | (bytes[index++] << 8) | (bytes[index++] << 16);
         var hardware = (firmware / 1000000) >>> 0;
         var compatibility = ((firmware / 10000) - (hardware * 100)) >>> 0;
         var feature = ((firmware - (hardware * 1000000) - (compatibility * 10000)) / 100) >>> 0;
         var bug = (firmware - (hardware * 1000000) - (compatibility * 10000) - (feature * 100)) >>> 0;
 
-        device.firmware = hardware + '.' + compatibility + '.' + feature + '.' + bug;
+        firmware_version.v = hardware + '.' + compatibility + '.' + feature + '.' + bug;
+        decoded.device.push(firmware_version);
     }
-
-    decoded.device.push(device);
 
     // Decode Temperature Int
     if (mask_sensor_int >> 3 & 0x01) {
@@ -139,12 +140,11 @@ function Decoder(bytes, port) {
         decoded.modules = [];
 
         while (bytes.length > index) {
-            var module = [];
-
+            var module_type = {n : "module"};
             switch (bytes[index]) {
                 case 1:
                     {
-                        module.push("EM S104");
+                        module_type.v = "EM S104";
                         index++;
                         var mask_ems104 = bytes[index++];
 
@@ -155,7 +155,7 @@ function Decoder(bytes, port) {
                             conn.v = (bytes[index++] | (bytes[index++] << 8));
                             conn.v = ((conn.v / 100.0) - 273.15).toFixed(2);
                             conn.u = 'C';
-                            module.push(conn);
+                            decoded.modules.push(conn);
                         }
 
                         // E2
@@ -164,7 +164,7 @@ function Decoder(bytes, port) {
                             conn.n = 'e2_kpa';
                             conn.v = ((bytes[index++] | (bytes[index++] << 8)) / 100.0).toFixed(2);
                             conn.u = 'kPa';
-                            module.push(conn);
+                            decoded.modules.push(conn);
                         }
 
                         // E3
@@ -173,7 +173,7 @@ function Decoder(bytes, port) {
                             conn.n = 'e3_kpa';
                             conn.v = ((bytes[index++] | (bytes[index++] << 8)) / 100.0).toFixed(2);
                             conn.u = 'kPa';
-                            module.push(conn);
+                            decoded.modules.push(conn);
                         }
 
                         // E4
@@ -182,14 +182,14 @@ function Decoder(bytes, port) {
                             conn.n = 'e4_kpa';
                             conn.v = ((bytes[index++] | (bytes[index++] << 8)) / 100.0).toFixed(2);
                             conn.u = 'kPa';
-                            module.push(conn);
+                            decoded.modules.push(conn);
                         }
                     }
                     break;
 
                 case 2:
                     {
-                        module.push("EM C104");
+                        module_type.v = "EM C104";
                         index++;
                         var mask_emc104 = bytes[index++];
 
@@ -213,7 +213,7 @@ function Decoder(bytes, port) {
                                     if (mask_emc104 >> 7 & 0x01) {
                                         conn.avg = (bytes[index++] / 12.0).toFixed(2);
                                     }
-                                    module.push(conn);
+                                    decoded.modules.push(conn);
                                 }
                             }
                         } else {
@@ -223,7 +223,7 @@ function Decoder(bytes, port) {
                                 conn.n = 'e1_curr';
                                 conn.v = ((bytes[index++] | (bytes[index++] << 8)) / 1000).toFixed(2);
                                 conn.u = "mA";
-                                module.push(conn);
+                                decoded.modules.push(conn);
                             }
 
                             // E2
@@ -232,7 +232,7 @@ function Decoder(bytes, port) {
                                 conn.n = 'e2_curr';
                                 conn.v = ((bytes[index++] | (bytes[index++] << 8)) / 1000).toFixed(2);
                                 conn.u = "mA";
-                                module.push(conn);
+                                decoded.modules.push(conn);
                             }
 
                             // E3
@@ -241,7 +241,7 @@ function Decoder(bytes, port) {
                                 conn.n = 'e3_curr';
                                 conn.v = ((bytes[index++] | (bytes[index++] << 8)) / 1000).toFixed(2);
                                 conn.u = "mA";
-                                module.push(conn);
+                                decoded.modules.push(conn);
                             }
 
                             // E4
@@ -250,7 +250,7 @@ function Decoder(bytes, port) {
                                 conn.n = 'e4_curr';
                                 conn.v = ((bytes[index++] | (bytes[index++] << 8)) / 1000).toFixed(2);
                                 conn.u = "mA";
-                                module.push(conn);
+                                decoded.modules.push(conn);
                             }
                         }
 
@@ -260,7 +260,7 @@ function Decoder(bytes, port) {
                 // EM W104
                 case 4:
                     {
-                        module.push("EM W104");
+                        module_type.v = "EM W104";
                         index++;
                         var mask_emw104 = bytes[index++];
 
@@ -271,28 +271,28 @@ function Decoder(bytes, port) {
                             conn.n = 'rain_lvl';
                             conn.v = (((bytes[index++] << 8) | bytes[index++]) / 10.0).toFixed(1);
                             conn.u = 'mm';
-                            module.push(conn);
+                            decoded.modules.push(conn);
 
                             //Average Wind Speed
                             var conn = {};
                             conn.n = 'avg_wind_speed'
                             conn.v = bytes[index++].toFixed(0);
                             conn.u = 'km/h';
-                            module.push(conn);
+                            decoded.modules.push(conn);
 
                             //Gust Wind Speed
                             var conn = {};
                             conn.n = 'gust_wind_speed';
                             conn.v = bytes[index++].toFixed(0);
                             conn.u = 'km/h';
-                            module.push(conn);
+                            decoded.modules.push(conn);
 
                             //Wind Direction
                             var conn = {};
                             conn.n = 'wind_direction';
                             conn.v = ((bytes[index++] << 8) | bytes[index++]).toFixed(0);
                             conn.u = 'graus';
-                            module.push(conn);
+                            decoded.modules.push(conn);
 
                             //Temperature
                             var conn = {};
@@ -300,14 +300,14 @@ function Decoder(bytes, port) {
                             conn.v = ((bytes[index++] << 8) | bytes[index++]) / 10.0;
                             conn.v = (conn.v - 273.15).toFixed(1);
                             conn.u = 'C';
-                            module.push(conn);
+                            decoded.modules.push(conn);
 
                             //Humidity
                             var conn = {};
                             conn.n = 'humidity';
                             conn.v = bytes[index++].toFixed(0);
                             conn.u = '%';
-                            module.push(conn);
+                            decoded.modules.push(conn);
 
                             //Lux and UV
                             if (mask_emw104 >> 1 & 0x01) {
@@ -315,14 +315,14 @@ function Decoder(bytes, port) {
                                 conn.n = 'luminosity';
                                 conn.v = (bytes[index++] << 16) | (bytes[index++] << 8) | bytes[index++];
                                 conn.u = 'lx';
-                                module.push(conn);
+                                decoded.modules.push(conn);
 
                                 var conn = {};
                                 conn.n = 'uv';
                                 conn.v = bytes[index++];
                                 conn.v = (conn.v / 10.0).toFixed(1);
                                 conn.u = '/';
-                                module.push(conn);
+                                decoded.modules.push(conn);
                             }
                         }
 
@@ -333,7 +333,7 @@ function Decoder(bytes, port) {
                             conn.v = (bytes[index++] << 8) | bytes[index++];
                             conn.v = (conn.v / 10.0).toFixed(1);
                             conn.u = 'W/m²';
-                            module.push(conn);
+                            decoded.modules.push(conn);
                         }
 
                         //Barometer
@@ -344,7 +344,7 @@ function Decoder(bytes, port) {
                             conn.v |= (bytes[index++] << 8) | bytes[index++] << 0;                        
                             conn.v = (conn.v / 100.0).toFixed(1);
                             conn.u = 'hPa²';
-                            module.push(conn);
+                            decoded.modules.push(conn);
                         }
                     }
                     break;
@@ -353,7 +353,7 @@ function Decoder(bytes, port) {
                 case 5:
                     {
                         index++;
-                        module.push("EM R102");
+                        module_type.v = "EM R102";
 
                         var mask_emr102 = bytes[index++];
                         var mask_data = bytes[index++];
@@ -364,12 +364,12 @@ function Decoder(bytes, port) {
                             conn.n = 'C3 Status';
                             conn.v = status_dry[(mask_data >> 0 & 0x01)];
                             conn.u = "bool";
-                            module.push(conn);
+                            decoded.modules.push(conn);
 
                             var conn = {};
                             conn.n = 'C3 Count';
                             conn.v = bytes[index++] | (bytes[index++] << 8);
-                            module.push(conn);
+                            decoded.modules.push(conn);
                         }
 
                         // E2
@@ -378,12 +378,12 @@ function Decoder(bytes, port) {
                             conn.n = 'C4 Status';
                             conn.v = status_dry[(mask_data >> 1 & 0x01)];
                             conn.u = "bool";
-                            module.push(conn);
+                            decoded.modules.push(conn);
 
                             var conn = {};
                             conn.n = 'C4 Count';
                             conn.v = bytes[index++] | (bytes[index++] << 8);
-                            module.push(conn);
+                            decoded.modules.push(conn);
                         }
 
                         // E3
@@ -391,7 +391,7 @@ function Decoder(bytes, port) {
                             var conn = {};
                             conn.n = 'B3 Relay';
                             conn.v = status_relay[(mask_data >> 2 & 0x01)];
-                            module.push(conn);
+                            decoded.modules.push(conn);
                         }
 
                         // E4
@@ -399,7 +399,7 @@ function Decoder(bytes, port) {
                             var conn = {};
                             conn.n = 'B4 Relay';
                             conn.v = status_relay[(mask_data >> 3 & 0x01)];
-                            module.push(conn);
+                            decoded.modules.push(conn);
                         }
 
                     }
@@ -429,22 +429,22 @@ function Decoder(bytes, port) {
 
                         switch (one_wire_ext_model) {
                             case 0x01:
-                                module.push("EM THW 200");
+                                module_type.v = "EM THW 200";
                                 break;
                             case 0x02:
-                                module.push("EM ACW 100");
+                                module_type.v = "EM ACW 100";
                                 break;
                             case 0x03:
-                                module.push("EM THW 201");
+                                module_type.v = "EM THW 201";
                                 break;
                             case 0x06:
-                                module.push("EM THW 100");
+                                module_type.v = "EM THW 100";
                                 break;
                             default:
-                                module.push("Unknow");
+                                module_type.v = "Unknow";
                                 break;
                         }
-
+                        decoded.modules.push(module_type);
                         //ROM
                         if ((mask_sensor_ext >> 4 & 0x07) && (mask_sensor_ext >> 7 & 0x00)) {
                             rom.v = bytes[index++];
@@ -460,7 +460,7 @@ function Decoder(bytes, port) {
 
                         rom.v = rom.v.toUpperCase();
                         rom.n = 'ROM';
-                        module.push(rom);
+                        decoded.modules.push(rom);
 
                         //Temperature
                         if (mask_em_acw_thw >> 0 & 0x01) {
@@ -469,7 +469,7 @@ function Decoder(bytes, port) {
                             sensor.u = 'C';
                             sensor.v = ((bytes[index++] | (bytes[index++] << 8)) / 100.0) - 273.15;
                             sensor.v = sensor.v.toFixed(2);
-                            module.push(sensor);
+                            decoded.modules.push(sensor);
                         }
 
                         //Humidity
@@ -479,7 +479,7 @@ function Decoder(bytes, port) {
                             sensor.u = '%';
                             sensor.v = (bytes[index++] | (bytes[index++] << 8)) / 100.0;
                             sensor.v = sensor.v.toFixed(2);
-                            module.push(sensor);
+                            decoded.modules.push(sensor);
                         }
 
                         //Lux
@@ -489,7 +489,7 @@ function Decoder(bytes, port) {
                             sensor.u = 'lux';
                             sensor.v = bytes[index++] | (bytes[index++] << 8);
                             sensor.v = sensor.v.toFixed(2);
-                            module.push(sensor);
+                            decoded.modules.push(sensor);
                         }
 
                         //Noise
@@ -499,7 +499,7 @@ function Decoder(bytes, port) {
                             sensor.u = 'dB';
                             sensor.v = (bytes[index++] | (bytes[index++] << 8)) / 100.0;
                             sensor.v = sensor.v.toFixed(2);
-                            module.push(sensor);
+                            decoded.modules.push(sensor);
                         }
 
                         //Temperature RTDT
@@ -512,7 +512,7 @@ function Decoder(bytes, port) {
                                 sensor.v |= (bytes[index++] << (8 * j));
                             }
                             sensor.v = ((sensor.v / 100.0) - 273.15).toFixed(2);
-                            module.push(sensor);
+                            decoded.modules.push(sensor);
                         }
                     }
                     break;
@@ -522,7 +522,6 @@ function Decoder(bytes, port) {
                         return decoded;
                     }
             }
-            decoded.modules.push(module);
         }
     }
     return decoded;
