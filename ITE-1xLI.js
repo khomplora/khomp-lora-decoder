@@ -1,6 +1,7 @@
 /**
 * Decode an uplink message from a buffer (array) of bytes to an object of fields.
 * If use ChirpStack, rename the function to "function Decode(port, bytes, variables)"
+* Decoder version: 1
 */
 
 function Decoder(bytes, port) {
@@ -50,7 +51,9 @@ function Decoder(bytes, port) {
       power_meter.push(frequency);
     }    
 
+    var c1_state_name = ["OPEN", "CLOSED"];
     var phases_name = ["Phase A", "Phase B", "Phase C"];
+    var tc_config_name = ["POWCT-T16-40/100/150/-333  ", "POWCT-T24-250-333  ", "POWCT-T36-630-333  ", "POWCT-2000-1500-333"];
 
     for (var index = 0; index < 3; index++) {
       if (mask >> (3+index) & 0x01) {
@@ -60,6 +63,7 @@ function Decoder(bytes, port) {
         var pwr_factor = {};
         var active_energy = {};
         var reactive_energy = {};
+        var tc_config = {};
 
         phase.push(phases_name[index]);
         
@@ -90,9 +94,34 @@ function Decoder(bytes, port) {
         reactive_energy.u = 'kWh';
         phase.push(reactive_energy);
 
+        tc_config.n = 'tc_config';
+        tc_config.vs = tc_config_name[bytes[i++]];
+        phase.push(tc_config);        
+
         power_meter.push(phase);        
       }      
     }
+
+    // B1
+    if (mask >> 6 & 0x01) {
+      var b1_state = {};
+      b1_state.n = 'b1_state';
+      b1_state.v = c1_state_name[bytes[i++]];
+      b1_state.u = 'bool';
+      
+      power_meter.push(b1_state);
+    } 
+
+     // Power Alarm
+     if (mask >> 7 & 0x01) {
+      var power_alarm = {};
+      power_alarm.n = 'power_alarm';
+      power_alarm.v = 'true';
+      power_alarm.u = 'bool';
+
+      power_meter.push(power_alarm);
+    } 
+
     decoded.power_meter.push(power_meter);
   }
 
