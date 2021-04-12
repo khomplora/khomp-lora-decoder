@@ -15,7 +15,7 @@ function Decoder(bytes, port) {
   if (decode_ver == 1) {
 
     switch (port) {
-      case 10: device.model = "ITE10Lx"; break;
+      case 10: device.model = "ITE11LI"; break;
       default: device.model = "Unknow Model"; return decoded;
     }
 
