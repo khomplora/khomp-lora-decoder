@@ -112,16 +112,6 @@ function Decoder(bytes, port) {
       power_meter.push(b1_state);
     } 
 
-     // Power Alarm
-     if (mask >> 7 & 0x01) {
-      var power_alarm = {};
-      power_alarm.n = 'power_alarm';
-      power_alarm.v = 'true';
-      power_alarm.u = 'bool';
-
-      power_meter.push(power_alarm);
-    } 
-
     decoded.power_meter.push(power_meter);
   }
 
