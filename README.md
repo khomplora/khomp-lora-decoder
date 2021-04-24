@@ -9,3 +9,4 @@ Example decoder functions to Khomp LoRaWAN end-devices
 | `ITC-100`        | **1.0** |
 | `ITP-1xx`        | **1.0** |
 | `ITE-11LI`       | **1.0** |
+| `NIT-20LR`       | **Beta** |
