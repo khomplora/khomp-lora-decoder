@@ -23,7 +23,12 @@ function Decoder(bytes, port) {
     // OPERATION MODE
     if (bytes[i++] === 0x4A) {
         device.mode = 'multi_mode';
-    } else {
+    }
+    else if (bytes[i] == 0x4B)
+    {
+        device.mode = 'digital_reflux_mode';
+    }
+    else {
         device.mode = 'single_mode';
     }
 
