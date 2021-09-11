@@ -42,7 +42,7 @@ function Decoder(bytes, port) {
     if (mask >> 1 & 0x01) {
       var battery = {};
       battery.n = 'battery';
-      battery.v = ((bytes[index++] / 120) + 1).toFixed(2);
+      battery.v = ((bytes[i++] / 120) + 1).toFixed(2);
       battery.u = 'V';
 
       decoded.device.push(battery);
@@ -51,7 +51,7 @@ function Decoder(bytes, port) {
     // Temperature Int
     if (mask >> 2 & 0x01) {
       var temperature = {};
-      temperature.v = (bytes[index++] / 3).toFixed(1);
+      temperature.v = (bytes[i++] / 3).toFixed(1);
       temperature.n = "temperature";
       temperature.u = "C";
 
@@ -61,105 +61,98 @@ function Decoder(bytes, port) {
     // Humidity Int
     if (mask >> 3 & 0x01) {
       var humidity = {};
-      humidity.v = (bytes[index++] / 2).toFixed(1);
+      humidity.v = (bytes[i++] / 2).toFixed(1);
       humidity.n = "humidity";
       humidity.u = "%";
       decoded.device.push(humidity);
     }
 
+    axis = [];
     // RMS
     if (mask >> 4 & 0x01) {
-      var rms = [];
+      var rms_x = {};  
+      rms_x.n = 'rms_x';
+      rms_x.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
+      rms_x.u = 'ms2';
+      axis.push(rms_x);
 
-      rms.n = 'rms_x';
-      rms.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
-      rms.u = 'ms2';
+      var rms_y = {};
+      rms_y.n = 'rms_y';
+      rms_y.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
+      rms_y.u = 'ms2';
+      axis.push(rms_y);
 
-      axis.push(rms);
-
-      rms.n = 'rms_y';
-      rms.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
-      rms.u = 'ms2';
-
-      axis.push(rms);
-
-      rms.n = 'rms_x';
-      rms.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
-      rms.u = 'ms2';
-
-      axis.push(rms);
+      var rms_z = {};
+      rms_z.n = 'rms_z';
+      rms_z.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
+      rms_z.u = 'ms2';
+      axis.push(rms_z);
     }
 
     // Kurtosis
     if (mask >> 5 & 0x01) {
-      var kurtosis = [];
+      var kurtosis_x = {};
+      kurtosis_x.n = 'kurtosis_x';
+      kurtosis_x.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
+      kurtosis_x.u = 'ms2';
+      axis.push(kurtosis_x);
 
-      kurtosis.n = 'kurtosis_x';
-      kurtosis.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
-      kurtosis.u = 'ms2';
+      var kurtosis_y = {};
+      kurtosis_y.n = 'kurtosis_y';
+      kurtosis_y.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
+      kurtosis_y.u = 'ms2';
+      axis.push(kurtosis_y);
 
-      axis.push(kurtosis);
-
-      kurtosis.n = 'kurtosis_y';
-      kurtosis.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
-      kurtosis.u = 'ms2';
-
-      axis.push(kurtosis);
-
-      kurtosis.n = 'kurtosis_z';
-      kurtosis.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
-      kurtosis.u = 'ms2';
-
-      axis.push(kurtosis);
+      var kurtosis_z = {};
+      kurtosis_z.n = 'kurtosis_z';
+      kurtosis_z.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
+      kurtosis_z.u = 'ms2';
+      axis.push(kurtosis_z);
     }
 
     // Peak to Peak
     if (mask >> 6 & 0x01) {
-      var peak_to_peak = [];
+      var peak_to_peak_x = {};
+      peak_to_peak_x.n = 'peak_to_peak_x';
+      peak_to_peak_x.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
+      peak_to_peak_x.u = 'ms2';
+      axis.push(peak_to_peak_x);
 
-      kurtosis.n = 'peak_to_peak_x';
-      kurtosis.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
-      kurtosis.u = 'ms2';
+      var peak_to_peak_y = {};
+      peak_to_peak_y.n = 'peak_to_peak_y';
+      peak_to_peak_y.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
+      peak_to_peak_y.u = 'ms2';
+      axis.push(peak_to_peak_y);
 
-      axis.push(peak_to_peak);
-
-      peak_to_peak.n = 'peak_to_peak_y';
-      peak_to_peak.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
-      peak_to_peak.u = 'ms2';
-
-      axis.push(peak_to_peak);
-
-      peak_to_peak.n = 'peak_to_peak_z';
-      peak_to_peak.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
-      peak_to_peak.u = 'ms2';
-
-      axis.push(peak_to_peak);
+      var peak_to_peak_z = {};
+      peak_to_peak_z.n = 'peak_to_peak_z';
+      peak_to_peak_z.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
+      peak_to_peak_z.u = 'ms2';
+      axis.push(peak_to_peak_z);
     }
 
     // Crest Factor
     if (mask >> 7 & 0x01) {
-      var crest_factor = [];
+      var crest_factor_x = {};
+      crest_factor_x.n = 'crest_factor_x';
+      crest_factor_x.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
+      crest_factor_x.u = 'ms2';
+      axis.push(crest_factor_x);
 
-      crest_factor.n = 'crest_factor_x';
-      crest_factor.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
-      crest_factor.u = 'ms2';
+      var crest_factor_y = {};
+      crest_factor_y.n = 'crest_factor_y';
+      crest_factor_y.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
+      crest_factor_y.u = 'ms2';
+      axis.push(crest_factor_y);
 
-      axis.push(crest_factor);
-
-      crest_factor.n = 'crest_factor_y';
-      crest_factor.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
-      crest_factor.u = 'ms2';
-
-      axis.push(crest_factor);
-
-      crest_factor.n = 'crest_factor_z';
-      crest_factor.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
-      crest_factor.u = 'ms2';
-
-      axis.push(crest_factor);
+      var crest_factor_z = {};
+      crest_factor_z.n = 'crest_factor_z';
+      crest_factor_z.v = (((bytes[i++] << 8) | bytes[i++]) / 1000.0).toFixed(4);
+      crest_factor_z.u = 'ms2';
+      axis.push(crest_factor_z);
     }
 
-    decoded.axis.push(axis);
+    decoded.axis = axis;
   }
 
   decoded.device.push(device);
